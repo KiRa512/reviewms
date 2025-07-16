@@ -1,5 +1,6 @@
 package com.kira.reviewms.reviews;
 
+import com.kira.reviewms.reviews.messaging.ReviewMessageProducer;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,9 +12,11 @@ import java.util.List;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final ReviewMessageProducer reviewMessageProducer;
 
-    public ReviewController(ReviewService reviewService) {
+    public ReviewController(ReviewService reviewService, ReviewMessageProducer reviewMessageProducer) {
         this.reviewService = reviewService;
+        this.reviewMessageProducer = reviewMessageProducer;
     }
 
     @GetMapping()
@@ -36,6 +39,8 @@ public class ReviewController {
     public ResponseEntity<Review> createReview(@RequestParam Long companyId, @RequestBody Review review) {
         Review createdReview = reviewService.createReview(companyId, review);
         URI location = URI.create("/reviews"+createdReview.getId());
+        // Send the review message to the RabbitMQ queue
+        reviewMessageProducer.sendMessage(createdReview);
         return ResponseEntity
                 .created(location)
                 .body(createdReview);

@@ -60,4 +60,11 @@ public class ReviewController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/avgRating")
+    public double getAvgRating(@RequestParam Long companyId){
+        List <Review> reviews = reviewService.getAllReviewsByCompanyId(companyId);
+        return reviews.stream().mapToDouble(Review::getRating).average().orElse(0);
+
+    }
 }
